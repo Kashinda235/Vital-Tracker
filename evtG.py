@@ -1,137 +1,135 @@
 import streamlit as st
 import pandas as pd
-import numpy as np
 import plotly.graph_objects as go
-from plotly.subplots import make_subplots
 import time
 from datetime import datetime
 import random
 
-# --- CONFIGURATION ---
+# --- PAGE CONFIG & STABLE CSS ---
 st.set_page_config(page_title="VitalGuard AI", layout="wide")
 
-# --- MOCK ML MODEL ---
-# In a real scenario, you would use: model = joblib.load('medical_model.pkl')
-def predict_health_status(hr, sys, dia, temp, ox):
-    """
-    Simulates a machine learning model logic for health assessment.
-    """
-    score = 0
+# This CSS "locks" the container height to prevent the scroll bar from jumping
+st.markdown("""
+    <style>
+    [data-testid="stVerticalBlock"] > div:has(div.stPlotlyChart) {
+        min-height: 450px; 
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+# --- ENHANCED PREDICTION LOGIC ---
+def analyze_health(vitals):
+    """Predicts health status and disease possibilities based on clinical ranges."""
+    issues = []
     possibilities = []
     
-    # Simple logic-based 'AI' for demonstration
-    if hr > 100 or hr < 60: score += 1
-    if sys > 140 or dia > 90: 
-        score += 2
-        possibilities.append("Hypertension Risk")
-    if temp > 100.4: 
-        score += 1
-        possibilities.append("Pyrexia (Fever)")
-    if ox < 94: 
-        score += 3
-        possibilities.append("Hypoxia Warning")
+    # Heart Rate Analysis
+    if vitals['HR'] > 120: 
+        issues.append("Critical Tachycardia")
+        possibilities.append("Arrhythmia / Stress Response")
+    elif vitals['HR'] < 50:
+        issues.append("Critical Bradycardia")
+        possibilities.append("Conduction Disorder")
+
+    # Blood Pressure Analysis
+    if vitals['SYS'] > 160 or vitals['DIA'] > 100:
+        issues.append("Stage 2 Hypertension")
+        possibilities.append("Cardiovascular Risk")
     
-    if score == 0:
-        return "Stable", "Normal vitals detected.", "Green", possibilities
-    elif score <= 2:
-        return "Warning", "Minor fluctuations detected. Monitor closely.", "Orange", possibilities
-    else:
-        return "Critical", "Immediate medical attention may be required.", "Red", possibilities
+    # Oxygen Analysis
+    if vitals['SPO2'] < 90:
+        issues.append("Critical Hypoxia")
+        possibilities.append("Respiratory Failure / Lung Distress")
+    elif vitals['SPO2'] < 95:
+        issues.append("Low Oxygen Saturation")
 
-# --- DATA GENERATION ---
-def get_simulated_data():
-    return {
-        'Heart Rate': 75 + random.gauss(0, 8),
-        'Systolic': 120 + random.gauss(0, 10),
-        'Diastolic': 80 + random.gauss(0, 5),
-        'Temperature': 98.6 + random.gauss(0, 0.5),
-        'Oxygen': 98 + random.gauss(0, 1),
-        'Timestamp': datetime.now().strftime("%H:%M:%S")
-    }
+    # Temperature Analysis
+    if vitals['TEMP'] > 101:
+        issues.append("High Fever (Pyrexia)")
+        possibilities.append("Infection / Inflammation")
+    
+    status = "CRITICAL" if any("Critical" in i for i in issues) else "STABLE"
+    color = "red" if status == "CRITICAL" else "green"
+    
+    return status, color, issues, possibilities
 
-# --- UI LAYOUT ---
-st.title("🩺 VitalGuard AI: Real-Time Monitoring")
+# --- DATA STORAGE ---
+if 'history' not in st.session_state:
+    st.session_state.history = pd.DataFrame(columns=['Time', 'HR', 'SYS', 'DIA', 'TEMP', 'SPO2'])
 
-# Sidebar for Patient Info
+# --- UI LAYOUT (STATIC) ---
+st.title("🩺 VitalGuard AI Dashboard")
+
 with st.sidebar:
-    st.header("Patient Profile")
-    name = st.text_input("Full Name", "John Doe")
-    age = st.number_input("Age", 0, 120, 30)
-    gender = st.selectbox("Gender", ["Male", "Female", "Other"])
-    med_id = st.text_input("Medical ID", "HID-9921")
+    st.header("Patient Setup")
+    name = st.text_input("Patient Name", "John Doe")
+    run = st.toggle("Live Monitoring", value=True)
+    if st.button("Clear History"):
+        st.session_state.history = st.session_state.history.iloc[0:0]
+
+# Create persistent placeholders (This prevents the scroll jump)
+metric_row = st.empty()
+ai_analysis_row = st.empty()
+chart_row = st.empty()
+
+# --- THE STABLE FRAGMENT ---
+@st.fragment(run_every=2)
+def update_vitals():
+    if not run:
+        st.warning("Monitoring Paused")
+        return
+
+    # 1. Generate/Simulate Data
+    new_data = {
+        'Time': datetime.now().strftime("%H:%M:%S"),
+        'HR': 75 + random.gauss(0, 10),
+        'SYS': 120 + random.gauss(0, 12),
+        'DIA': 80 + random.gauss(0, 6),
+        'TEMP': 98.6 + random.gauss(0, 0.6),
+        'SPO2': 98 + random.gauss(0, 1.5)
+    }
     
-    st.divider()
-    run_monitoring = st.toggle("Start Live Stream", value=True)
-    clear_data = st.button("Reset Session")
+    # Update Session State
+    df = pd.concat([st.session_state.history, pd.DataFrame([new_data])], ignore_index=True).iloc[-30:]
+    st.session_state.history = df
 
-# Session State Initialization
-if 'history' not in st.session_state or clear_data:
-    st.session_state.history = pd.DataFrame(columns=['Timestamp', 'Heart Rate', 'Systolic', 'Diastolic', 'Temperature', 'Oxygen'])
+    # 2. Update Metrics in the placeholder
+    with metric_row.container():
+        c1, c2, c3, c4 = st.columns(4)
+        c1.metric("Heart Rate", f"{new_data['HR']:.0f} BPM")
+        c2.metric("BP (Sys/Dia)", f"{new_data['SYS']:.0f}/{new_data['DIA']:.0f}")
+        c3.metric("Temp", f"{new_data['TEMP']:.1f} °F")
+        c4.metric("Oxygen", f"{new_data['SPO2']:.1f}%")
 
-# --- MAIN DASHBOARD ---
-# Placeholders for dynamic content
-metrics_placeholder = st.empty()
-chart_placeholder = st.empty()
-prediction_placeholder = st.empty()
-
-# Simulation Loop
-while run_monitoring:
-    # 1. Get new data
-    new_reading = get_simulated_data()
-    st.session_state.history = pd.concat([st.session_state.history, pd.DataFrame([new_reading])], ignore_index=True)
+    # 3. Predict Health Status & Diseases
+    status, color, issues, possibilities = analyze_health(new_data)
     
-    # Keep only last 50 readings (similar to your deque)
-    if len(st.session_state.history) > 50:
-        st.session_state.history = st.session_state.history.iloc[1:]
-
-    # 2. Update Metrics (Top Row)
-    with metrics_placeholder.container():
-        col1, col2, col3, col4 = st.columns(4)
-        col1.metric("Heart Rate", f"{new_reading['Heart Rate']:.0f} BPM", f"{new_reading['Heart Rate'] - 75:.1f}")
-        col2.metric("Blood Pressure", f"{new_reading['Systolic']:.0f}/{new_reading['Diastolic']:.0f}", None)
-        col3.metric("Temperature", f"{new_reading['Temperature']:.1f} °F", None)
-        col4.metric("Oxygen (SpO2)", f"{new_reading['Oxygen']:.0f} %", None)
-
-    # 3. Predict Health Status
-    status, msg, color, issues = predict_health_status(
-        new_reading['Heart Rate'], new_reading['Systolic'], 
-        new_reading['Diastolic'], new_reading['Temperature'], new_reading['Oxygen']
-    )
-
-    with prediction_placeholder.container():
+    with ai_analysis_row.container():
         st.divider()
-        c1, c2 = st.columns([1, 2])
-        with c1:
-            st.subheader("AI Health Analysis")
-            st.markdown(f"**Status:** :{color}[{status}]")
-            st.write(msg)
-        with c2:
-            st.subheader("Potential Indicators")
-            if issues:
-                for issue in issues:
-                    st.warning(f"⚠️ {issue}")
+        col_a, col_b = st.columns(2)
+        with col_a:
+            st.subheader(f"Status: :{color}[{status}]")
+            for issue in issues:
+                st.write(f"⚠️ {issue}")
+        with col_b:
+            st.subheader("Disease Possibilities")
+            if possibilities:
+                st.info(", ".join(set(possibilities)))
             else:
-                st.success("✅ No immediate disease markers detected.")
+                st.success("No immediate disease markers detected.")
+        st.divider()
 
-    # 4. Update Charts
-    with chart_placeholder.container():
-        fig = make_subplots(rows=2, cols=2, 
-                            subplot_titles=("Heart Rate History", "BP (Systolic/Diastolic)", 
-                                            "Body Temp", "Oxygen Saturation"))
+    # 4. Update Charts in the placeholder
+    with chart_row.container():
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(x=df['Time'], y=df['HR'], name="Heart Rate", line=dict(color='red')))
+        fig.add_trace(go.Scatter(x=df['Time'], y=df['SPO2'], name="Oxygen", line=dict(color='green')))
         
-        hist = st.session_state.history
+        # Add a "Normal Range" shaded area for HR
+        fig.add_hrect(y0=60, y1=100, fillcolor="green", opacity=0.1, line_width=0, annotation_text="Normal HR")
         
-        # Heart Rate
-        fig.add_trace(go.Scatter(x=hist['Timestamp'], y=hist['Heart Rate'], name="BPM", line=dict(color='red')), row=1, col=1)
-        # BP
-        fig.add_trace(go.Scatter(x=hist['Timestamp'], y=hist['Systolic'], name="Sys", line=dict(color='blue')), row=1, col=2)
-        fig.add_trace(go.Scatter(x=hist['Timestamp'], y=hist['Diastolic'], name="Dia", line=dict(color='green')), row=1, col=2)
-        # Temp
-        fig.add_trace(go.Scatter(x=hist['Timestamp'], y=hist['Temperature'], name="Temp", line=dict(color='orange')), row=2, col=1)
-        # SpO2
-        fig.add_trace(go.Scatter(x=hist['Timestamp'], y=hist['Oxygen'], name="SpO2", line=dict(color='teal')), row=2, col=2)
-        
-        fig.update_layout(height=600, showlegend=False, template="plotly_white")
-        st.plotly_chart(fig, use_container_width=True)
+        fig.update_layout(height=400, margin=dict(l=10, r=10, t=10, b=10), template="plotly_white")
+        st.plotly_chart(fig, use_container_width=True, key="vital_chart")
 
-    time.sleep(2) # Refresh rate
+# Execute
+update_vitals()
