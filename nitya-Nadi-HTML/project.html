@@ -1,0 +1,1389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediCare - Hospital Management System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #0A4D68;
+            --primary-light: #088395;
+            --accent: #05BFDB;
+            --accent-warm: #00FFCA;
+            --bg-main: #F8FFFE;
+            --bg-card: #FFFFFF;
+            --text-primary: #1A1A1A;
+            --text-secondary: #6B7280;
+            --success: #10B981;
+            --warning: #F59E0B;
+            --danger: #EF4444;
+            --border: #E5E7EB;
+            --shadow-sm: 0 2px 8px rgba(10, 77, 104, 0.04);
+            --shadow-md: 0 4px 16px rgba(10, 77, 104, 0.08);
+            --shadow-lg: 0 8px 32px rgba(10, 77, 104, 0.12);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: linear-gradient(135deg, #F8FFFE 0%, #EDF7F6 100%);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        /* Header & Navigation */
+        header {
+            background: var(--bg-card);
+            box-shadow: var(--shadow-md);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            animation: slideDown 0.4s ease-out;
+        }
+
+        @keyframes slideDown {
+            from {
+                transform: translateY(-100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        nav {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.75rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 50%, var(--accent) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-family: 'Space Mono', monospace;
+            letter-spacing: -0.5px;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text-primary);
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            position: relative;
+            padding: 0.5rem 0;
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--primary-light), var(--accent));
+            transition: width 0.3s ease;
+        }
+
+        .nav-links a:hover::after,
+        .nav-links a.active::after {
+            width: 100%;
+        }
+
+        /* Main Container */
+        main {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Dashboard Grid */
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+            animation: fadeIn 0.6s ease-out 0.2s both;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: var(--shadow-md);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-light), var(--accent));
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .stat-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .stat-icon {
+            width: 56px;
+            height: 56px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 1rem;
+            font-size: 1.5rem;
+            font-weight: 700;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .stat-card:nth-child(1) .stat-icon { background: linear-gradient(135deg, #0A4D68 0%, #088395 100%); color: white; }
+        .stat-card:nth-child(2) .stat-icon { background: linear-gradient(135deg, #10B981 0%, #34D399 100%); color: white; }
+        .stat-card:nth-child(3) .stat-icon { background: linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%); color: white; }
+        .stat-card:nth-child(4) .stat-icon { background: linear-gradient(135deg, #8B5CF6 0%, #A78BFA 100%); color: white; }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+            font-family: 'Space Mono', monospace;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+
+        /* Sections */
+        .section {
+            background: var(--bg-card);
+            border-radius: 20px;
+            padding: 2.5rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow-md);
+            animation: fadeIn 0.6s ease-out both;
+        }
+
+        .section:nth-child(even) {
+            animation-delay: 0.1s;
+        }
+
+        .section:nth-child(odd) {
+            animation-delay: 0.2s;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .section-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .section-title::before {
+            content: '';
+            width: 4px;
+            height: 28px;
+            background: linear-gradient(180deg, var(--primary-light), var(--accent));
+            border-radius: 2px;
+        }
+
+        /* Forms */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        label {
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 0.95rem;
+        }
+
+        input, select, textarea {
+            padding: 0.875rem 1rem;
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: var(--bg-main);
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary-light);
+            box-shadow: 0 0 0 4px rgba(8, 131, 149, 0.1);
+            background: white;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 0.875rem 1.75rem;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Outfit', sans-serif;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.5s, height 0.5s;
+        }
+
+        .btn:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 16px rgba(10, 77, 104, 0.3);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-warm) 100%);
+            color: var(--primary);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        /* Tables */
+        .table-container {
+            overflow-x: auto;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        th, td {
+            padding: 1rem 1.5rem;
+            text-align: left;
+        }
+
+        th {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            color: white;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 0.5px;
+        }
+
+        tr {
+            border-bottom: 1px solid var(--border);
+            transition: background 0.2s ease;
+        }
+
+        tr:hover {
+            background: var(--bg-main);
+        }
+
+        /* Vitals Monitor */
+        .vitals-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .vital-card {
+            background: linear-gradient(135deg, var(--bg-main) 0%, white 100%);
+            padding: 1.5rem;
+            border-radius: 12px;
+            border: 2px solid var(--border);
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .vital-card:hover {
+            border-color: var(--accent);
+            transform: scale(1.02);
+        }
+
+        .vital-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary);
+            font-family: 'Space Mono', monospace;
+            margin: 0.5rem 0;
+        }
+
+        .vital-label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .vital-status {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-top: 0.5rem;
+        }
+
+        .status-normal { background: #D1FAE5; color: var(--success); }
+        .status-warning { background: #FEF3C7; color: var(--warning); }
+        .status-critical { background: #FEE2E2; color: var(--danger); }
+
+        /* Chat Interface */
+        .chat-container {
+            height: 500px;
+            display: flex;
+            flex-direction: column;
+            background: var(--bg-main);
+            border-radius: 12px;
+            overflow: hidden;
+            border: 2px solid var(--border);
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .message {
+            max-width: 75%;
+            padding: 1rem 1.25rem;
+            border-radius: 16px;
+            animation: messageSlide 0.3s ease-out;
+        }
+
+        @keyframes messageSlide {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message-bot {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            color: white;
+            align-self: flex-start;
+            border-bottom-left-radius: 4px;
+        }
+
+        .message-user {
+            background: var(--accent);
+            color: var(--primary);
+            align-self: flex-end;
+            border-bottom-right-radius: 4px;
+        }
+
+        .chat-input-container {
+            padding: 1rem;
+            background: white;
+            border-top: 2px solid var(--border);
+            display: flex;
+            gap: 1rem;
+        }
+
+        .chat-input {
+            flex: 1;
+        }
+
+        /* OCR Upload */
+        .upload-area {
+            border: 3px dashed var(--border);
+            border-radius: 12px;
+            padding: 3rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            background: var(--bg-main);
+        }
+
+        .upload-area:hover {
+            border-color: var(--accent);
+            background: white;
+            transform: scale(1.01);
+        }
+
+        .upload-area.drag-over {
+            border-color: var(--accent);
+            background: linear-gradient(135deg, rgba(5, 191, 219, 0.05) 0%, rgba(0, 255, 202, 0.05) 100%);
+        }
+
+        .upload-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            color: var(--primary-light);
+        }
+
+        /* Badges */
+        .badge {
+            display: inline-block;
+            padding: 0.375rem 0.875rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .badge-scheduled { background: #DBEAFE; color: #1E40AF; }
+        .badge-completed { background: #D1FAE5; color: #065F46; }
+        .badge-cancelled { background: #FEE2E2; color: #991B1B; }
+        .badge-active { background: #D1FAE5; color: var(--success); }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .tab {
+            padding: 1rem 2rem;
+            background: transparent;
+            border: none;
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--text-secondary);
+            transition: all 0.3s ease;
+            font-family: 'Outfit', sans-serif;
+            font-size: 1rem;
+        }
+
+        .tab:hover {
+            color: var(--primary);
+        }
+
+        .tab.active {
+            color: var(--primary);
+            border-bottom-color: var(--accent);
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Prescription Card */
+        .prescription-card {
+            background: linear-gradient(135deg, white 0%, var(--bg-main) 100%);
+            padding: 1.5rem;
+            border-radius: 12px;
+            border-left: 4px solid var(--primary-light);
+            margin-bottom: 1rem;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .prescription-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .medication-name {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .dosage {
+            color: var(--text-secondary);
+            margin-top: 0.25rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            nav {
+                flex-direction: column;
+                gap: 1rem;
+            }
+
+            .nav-links {
+                flex-direction: column;
+                gap: 0.5rem;
+                text-align: center;
+            }
+
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .section {
+                padding: 1.5rem;
+            }
+
+            .message {
+                max-width: 90%;
+            }
+        }
+
+        /* Loading Animation */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Success Message */
+        .success-message {
+            background: linear-gradient(135deg, #D1FAE5 0%, #A7F3D0 100%);
+            color: #065F46;
+            padding: 1rem 1.5rem;
+            border-radius: 10px;
+            margin-top: 1rem;
+            border-left: 4px solid var(--success);
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* AI Summary Card */
+        .ai-summary {
+            background: linear-gradient(135deg, #EEF2FF 0%, #E0E7FF 100%);
+            padding: 1.5rem;
+            border-radius: 12px;
+            border-left: 4px solid #6366F1;
+            margin-top: 1rem;
+        }
+
+        .ai-summary-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 700;
+            color: #4F46E5;
+            margin-bottom: 0.75rem;
+        }
+
+        /* File Preview */
+        .file-preview {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+            border: 2px solid var(--border);
+        }
+
+        .file-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 1.25rem;
+        }
+
+        .file-info {
+            flex: 1;
+        }
+
+        .file-name {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .file-size {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="logo">MediCare+</div>
+            <ul class="nav-links">
+                <li><a href="#dashboard" class="active">Dashboard</a></li>
+                <li><a href="#patients">Patients</a></li>
+                <li><a href="#appointments">Appointments</a></li>
+                <li><a href="#doctors">Doctors</a></li>
+                <li><a href="#reports">Reports</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <!-- Dashboard Stats -->
+        <div class="dashboard">
+            <div class="stat-card">
+                <div class="stat-icon">👥</div>
+                <div class="stat-value">1,247</div>
+                <div class="stat-label">Total Patients</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">📅</div>
+                <div class="stat-value">89</div>
+                <div class="stat-label">Today's Appointments</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">⚕️</div>
+                <div class="stat-value">34</div>
+                <div class="stat-label">Active Doctors</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">📊</div>
+                <div class="stat-value">$42.5K</div>
+                <div class="stat-label">Monthly Revenue</div>
+            </div>
+        </div>
+
+        <!-- Tab Navigation -->
+        <div class="tabs">
+            <button class="tab active" onclick="switchTab('registration')">Patient Registration</button>
+            <button class="tab" onclick="switchTab('appointments')">Appointments</button>
+            <button class="tab" onclick="switchTab('vitals')">Live Vitals</button>
+            <button class="tab" onclick="switchTab('triage')">AI Triage</button>
+            <button class="tab" onclick="switchTab('prescriptions')">Prescriptions</button>
+            <button class="tab" onclick="switchTab('reports')">OCR Reports</button>
+        </div>
+
+        <!-- Patient Registration -->
+        <div id="registration" class="tab-content active">
+            <div class="section">
+                <div class="section-header">
+                    <h2 class="section-title">Patient Registration</h2>
+                </div>
+                <form id="patientForm">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="firstName">First Name *</label>
+                            <input type="text" id="firstName" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="lastName">Last Name *</label>
+                            <input type="text" id="lastName" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="patientId">Patient ID</label>
+                            <input type="text" id="patientId" value="PAT-2024-0001" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label for="dob">Date of Birth *</label>
+                            <input type="date" id="dob" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="gender">Gender *</label>
+                            <select id="gender" required>
+                                <option value="">Select Gender</option>
+                                <option value="male">Male</option>
+                                <option value="female">Female</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="phone">Phone Number *</label>
+                            <input type="tel" id="phone" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="email">Email Address</label>
+                            <input type="email" id="email">
+                        </div>
+                        <div class="form-group">
+                            <label for="bloodGroup">Blood Group</label>
+                            <select id="bloodGroup">
+                                <option value="">Select Blood Group</option>
+                                <option value="A+">A+</option>
+                                <option value="A-">A-</option>
+                                <option value="B+">B+</option>
+                                <option value="B-">B-</option>
+                                <option value="O+">O+</option>
+                                <option value="O-">O-</option>
+                                <option value="AB+">AB+</option>
+                                <option value="AB-">AB-</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="grid-column: 1 / -1;">
+                            <label for="address">Address</label>
+                            <textarea id="address"></textarea>
+                        </div>
+                        <div class="form-group" style="grid-column: 1 / -1;">
+                            <label for="medicalHistory">Medical History</label>
+                            <textarea id="medicalHistory" placeholder="Pre-existing conditions, allergies, past surgeries..."></textarea>
+                        </div>
+                    </div>
+                    <div style="margin-top: 2rem; display: flex; gap: 1rem;">
+                        <button type="submit" class="btn btn-primary">Register Patient</button>
+                        <button type="reset" class="btn btn-secondary">Clear Form</button>
+                    </div>
+                </form>
+                <div id="registrationSuccess" class="success-message hidden">
+                    ✓ Patient registered successfully!
+                </div>
+            </div>
+        </div>
+
+        <!-- Appointments -->
+        <div id="appointments" class="tab-content">
+            <div class="section">
+                <div class="section-header">
+                    <h2 class="section-title">Appointment Booking</h2>
+                </div>
+                <form id="appointmentForm">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="appointmentPatient">Patient ID *</label>
+                            <input type="text" id="appointmentPatient" placeholder="PAT-2024-XXXX" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="appointmentDoctor">Select Doctor *</label>
+                            <select id="appointmentDoctor" required>
+                                <option value="">Choose a doctor</option>
+                                <option value="dr-sharma">Dr. Rajesh Sharma (Cardiology)</option>
+                                <option value="dr-patel">Dr. Priya Patel (Pediatrics)</option>
+                                <option value="dr-singh">Dr. Amit Singh (Orthopedics)</option>
+                                <option value="dr-kumar">Dr. Sunita Kumar (Neurology)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="appointmentDate">Appointment Date *</label>
+                            <input type="date" id="appointmentDate" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="appointmentTime">Appointment Time *</label>
+                            <select id="appointmentTime" required>
+                                <option value="">Select Time</option>
+                                <option value="09:00">09:00 AM</option>
+                                <option value="10:00">10:00 AM</option>
+                                <option value="11:00">11:00 AM</option>
+                                <option value="14:00">02:00 PM</option>
+                                <option value="15:00">03:00 PM</option>
+                                <option value="16:00">04:00 PM</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="grid-column: 1 / -1;">
+                            <label for="appointmentReason">Reason for Visit</label>
+                            <textarea id="appointmentReason" placeholder="Describe symptoms or reason for consultation..."></textarea>
+                        </div>
+                    </div>
+                    <div style="margin-top: 2rem;">
+                        <button type="submit" class="btn btn-primary">Book Appointment</button>
+                    </div>
+                </form>
+                <div id="appointmentSuccess" class="success-message hidden">
+                    ✓ Appointment booked successfully! SMS reminder sent.
+                </div>
+
+                <h3 style="margin-top: 3rem; margin-bottom: 1.5rem; color: var(--primary); font-size: 1.5rem;">Today's Appointments</h3>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Time</th>
+                                <th>Patient ID</th>
+                                <th>Patient Name</th>
+                                <th>Doctor</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>09:00 AM</td>
+                                <td>PAT-2024-0234</td>
+                                <td>Rahul Verma</td>
+                                <td>Dr. Rajesh Sharma</td>
+                                <td><span class="badge badge-completed">Completed</span></td>
+                                <td><button class="btn btn-primary" style="padding: 0.5rem 1rem;">View</button></td>
+                            </tr>
+                            <tr>
+                                <td>10:00 AM</td>
+                                <td>PAT-2024-0456</td>
+                                <td>Anita Desai</td>
+                                <td>Dr. Priya Patel</td>
+                                <td><span class="badge badge-scheduled">Scheduled</span></td>
+                                <td><button class="btn btn-primary" style="padding: 0.5rem 1rem;">View</button></td>
+                            </tr>
+                            <tr>
+                                <td>11:00 AM</td>
+                                <td>PAT-2024-0789</td>
+                                <td>Vikram Singh</td>
+                                <td>Dr. Amit Singh</td>
+                                <td><span class="badge badge-scheduled">Scheduled</span></td>
+                                <td><button class="btn btn-primary" style="padding: 0.5rem 1rem;">View</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Live Vitals Monitoring -->
+        <div id="vitals" class="tab-content">
+            <div class="section">
+                <div class="section-header">
+                    <h2 class="section-title">Live Vitals Monitoring</h2>
+                    <span class="badge badge-active">● LIVE</span>
+                </div>
+                
+                <div class="form-group" style="max-width: 300px; margin-bottom: 2rem;">
+                    <label for="vitalPatientSelect">Select Patient</label>
+                    <select id="vitalPatientSelect">
+                        <option value="pat1">PAT-2024-0234 - Rahul Verma</option>
+                        <option value="pat2">PAT-2024-0456 - Anita Desai</option>
+                        <option value="pat3">PAT-2024-0789 - Vikram Singh</option>
+                    </select>
+                </div>
+
+                <div class="vitals-grid">
+                    <div class="vital-card">
+                        <div class="vital-label">Heart Rate</div>
+                        <div class="vital-value" id="heartRate">72</div>
+                        <div style="font-size: 0.85rem; color: var(--text-secondary);">BPM</div>
+                        <span class="vital-status status-normal">Normal</span>
+                    </div>
+                    <div class="vital-card">
+                        <div class="vital-label">Blood Pressure</div>
+                        <div class="vital-value" id="bloodPressure" style="font-size: 1.5rem;">120/80</div>
+                        <div style="font-size: 0.85rem; color: var(--text-secondary);">mmHg</div>
+                        <span class="vital-status status-normal">Normal</span>
+                    </div>
+                    <div class="vital-card">
+                        <div class="vital-label">Temperature</div>
+                        <div class="vital-value" id="temperature">98.6</div>
+                        <div style="font-size: 0.85rem; color: var(--text-secondary);">°F</div>
+                        <span class="vital-status status-normal">Normal</span>
+                    </div>
+                    <div class="vital-card">
+                        <div class="vital-label">Oxygen Saturation</div>
+                        <div class="vital-value" id="oxygenSat">98</div>
+                        <div style="font-size: 0.85rem; color: var(--text-secondary);">%</div>
+                        <span class="vital-status status-normal">Normal</span>
+                    </div>
+                    <div class="vital-card">
+                        <div class="vital-label">Respiratory Rate</div>
+                        <div class="vital-value" id="respRate">16</div>
+                        <div style="font-size: 0.85rem; color: var(--text-secondary);">breaths/min</div>
+                        <span class="vital-status status-normal">Normal</span>
+                    </div>
+                    <div class="vital-card">
+                        <div class="vital-label">Blood Glucose</div>
+                        <div class="vital-value" id="glucose">95</div>
+                        <div style="font-size: 0.85rem; color: var(--text-secondary);">mg/dL</div>
+                        <span class="vital-status status-normal">Normal</span>
+                    </div>
+                </div>
+
+                <div style="margin-top: 2rem; display: flex; gap: 1rem;">
+                    <button class="btn btn-primary" onclick="recordVitals()">Record Vitals</button>
+                    <button class="btn btn-secondary" onclick="viewHistory()">View History</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI Triage Chatbot -->
+        <div id="triage" class="tab-content">
+            <div class="section">
+                <div class="section-header">
+                    <h2 class="section-title">AI Triage Assistant</h2>
+                    <span style="font-size: 0.9rem; color: var(--text-secondary);">Friendly Gatekeeper</span>
+                </div>
+                
+                <div class="chat-container">
+                    <div class="chat-messages" id="chatMessages">
+                        <div class="message message-bot">
+                            Hello! 👋 I'm your AI Health Assistant. I'm here to help understand your symptoms and guide you to the right care. How are you feeling today?
+                        </div>
+                    </div>
+                    <div class="chat-input-container">
+                        <input type="text" class="chat-input" id="triageInput" placeholder="Describe your symptoms...">
+                        <button class="btn btn-primary" onclick="sendTriageMessage()">Send</button>
+                    </div>
+                </div>
+
+                <div style="margin-top: 1.5rem; padding: 1rem; background: #FFF7ED; border-left: 4px solid var(--warning); border-radius: 8px;">
+                    <strong>Note:</strong> This AI assistant provides preliminary guidance only. Please consult with a healthcare professional for proper diagnosis and treatment.
+                </div>
+            </div>
+        </div>
+
+        <!-- Prescriptions -->
+        <div id="prescriptions" class="tab-content">
+            <div class="section">
+                <div class="section-header">
+                    <h2 class="section-title">Prescription Management</h2>
+                </div>
+
+                <form id="prescriptionForm">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="prescriptionPatient">Patient ID *</label>
+                            <input type="text" id="prescriptionPatient" placeholder="PAT-2024-XXXX" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="prescriptionDoctor">Prescribing Doctor *</label>
+                            <input type="text" id="prescriptionDoctor" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="medication">Medication Name *</label>
+                            <input type="text" id="medication" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="dosage">Dosage *</label>
+                            <input type="text" id="dosage" placeholder="e.g., 500mg twice daily" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="duration">Duration</label>
+                            <input type="text" id="duration" placeholder="e.g., 7 days">
+                        </div>
+                        <div class="form-group">
+                            <label for="frequency">Frequency</label>
+                            <select id="frequency">
+                                <option value="once">Once daily</option>
+                                <option value="twice">Twice daily</option>
+                                <option value="thrice">Three times daily</option>
+                                <option value="asneeded">As needed</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="grid-column: 1 / -1;">
+                            <label for="instructions">Special Instructions</label>
+                            <textarea id="instructions" placeholder="e.g., Take with food, avoid alcohol..."></textarea>
+                        </div>
+                    </div>
+                    <div style="margin-top: 2rem;">
+                        <button type="submit" class="btn btn-primary">Add Prescription</button>
+                    </div>
+                </form>
+
+                <h3 style="margin-top: 3rem; margin-bottom: 1.5rem; color: var(--primary); font-size: 1.5rem;">Active Prescriptions</h3>
+                
+                <div class="prescription-card">
+                    <div class="prescription-header">
+                        <div>
+                            <div class="medication-name">Amoxicillin 500mg</div>
+                            <div class="dosage">Take 1 capsule twice daily for 7 days</div>
+                        </div>
+                        <span class="badge badge-active">Active</span>
+                    </div>
+                    <div style="color: var(--text-secondary); font-size: 0.9rem;">
+                        <div>Prescribed by: Dr. Rajesh Sharma</div>
+                        <div>Date: Feb 5, 2024</div>
+                        <div style="margin-top: 0.5rem;"><strong>Instructions:</strong> Take with food</div>
+                    </div>
+                </div>
+
+                <div class="prescription-card">
+                    <div class="prescription-header">
+                        <div>
+                            <div class="medication-name">Paracetamol 650mg</div>
+                            <div class="dosage">Take 1 tablet three times daily as needed</div>
+                        </div>
+                        <span class="badge badge-active">Active</span>
+                    </div>
+                    <div style="color: var(--text-secondary); font-size: 0.9rem;">
+                        <div>Prescribed by: Dr. Priya Patel</div>
+                        <div>Date: Feb 6, 2024</div>
+                        <div style="margin-top: 0.5rem;"><strong>Instructions:</strong> For fever or pain relief</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- OCR Reports -->
+        <div id="reports" class="tab-content">
+            <div class="section">
+                <div class="section-header">
+                    <h2 class="section-title">OCR Medical Reports</h2>
+                    <span style="font-size: 0.9rem; color: var(--text-secondary);">No typing required!</span>
+                </div>
+
+                <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()">
+                    <div class="upload-icon">📄</div>
+                    <h3 style="margin-bottom: 0.5rem; color: var(--primary);">Upload Medical Report</h3>
+                    <p style="color: var(--text-secondary);">Click to browse or drag and drop files here</p>
+                    <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.5rem;">Supports: PDF, JPG, PNG (Max 10MB)</p>
+                    <input type="file" id="fileInput" accept=".pdf,.jpg,.jpeg,.png" style="display: none;" onchange="handleFileUpload(event)">
+                </div>
+
+                <div id="filePreviewContainer" class="hidden">
+                    <div class="file-preview">
+                        <div class="file-icon">📄</div>
+                        <div class="file-info">
+                            <div class="file-name" id="fileName">report.pdf</div>
+                            <div class="file-size" id="fileSize">2.4 MB</div>
+                        </div>
+                        <button class="btn btn-primary" onclick="processOCR()">Process with OCR</button>
+                    </div>
+                </div>
+
+                <div id="ocrResults" class="hidden">
+                    <div class="ai-summary">
+                        <div class="ai-summary-header">
+                            🤖 AI-Enhanced Summary
+                        </div>
+                        <div style="color: var(--text-primary); line-height: 1.8;">
+                            <p><strong>Report Type:</strong> Complete Blood Count (CBC)</p>
+                            <p><strong>Key Findings:</strong></p>
+                            <ul style="margin-left: 1.5rem; margin-top: 0.5rem;">
+                                <li>Hemoglobin: 13.5 g/dL (Normal)</li>
+                                <li>White Blood Cell Count: 7,200/μL (Normal)</li>
+                                <li>Platelet Count: 245,000/μL (Normal)</li>
+                            </ul>
+                            <p style="margin-top: 0.75rem;"><strong>Conclusion:</strong> All parameters within normal range. No immediate concerns detected.</p>
+                        </div>
+                    </div>
+
+                    <h3 style="margin-top: 2rem; margin-bottom: 1rem; color: var(--primary);">Extracted Report Data</h3>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Parameter</th>
+                                    <th>Value</th>
+                                    <th>Reference Range</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Hemoglobin</td>
+                                    <td>13.5 g/dL</td>
+                                    <td>12.0 - 16.0 g/dL</td>
+                                    <td><span class="badge badge-completed">Normal</span></td>
+                                </tr>
+                                <tr>
+                                    <td>WBC Count</td>
+                                    <td>7,200/μL</td>
+                                    <td>4,000 - 11,000/μL</td>
+                                    <td><span class="badge badge-completed">Normal</span></td>
+                                </tr>
+                                <tr>
+                                    <td>Platelets</td>
+                                    <td>245,000/μL</td>
+                                    <td>150,000 - 400,000/μL</td>
+                                    <td><span class="badge badge-completed">Normal</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div style="margin-top: 2rem; display: flex; gap: 1rem;">
+                        <button class="btn btn-success">Save to Patient Record</button>
+                        <button class="btn btn-secondary">Download Report</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Tab Switching
+        function switchTab(tabName) {
+            const tabs = document.querySelectorAll('.tab');
+            const contents = document.querySelectorAll('.tab-content');
+            
+            tabs.forEach(tab => tab.classList.remove('active'));
+            contents.forEach(content => content.classList.remove('active'));
+            
+            event.target.classList.add('active');
+            document.getElementById(tabName).classList.add('active');
+        }
+
+        // Patient Registration
+        document.getElementById('patientForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const successMsg = document.getElementById('registrationSuccess');
+            successMsg.classList.remove('hidden');
+            
+            setTimeout(() => {
+                this.reset();
+                // Generate new patient ID
+                const currentId = parseInt(document.getElementById('patientId').value.split('-')[2]);
+                document.getElementById('patientId').value = `PAT-2024-${String(currentId + 1).padStart(4, '0')}`;
+                successMsg.classList.add('hidden');
+            }, 3000);
+        });
+
+        // Appointment Booking
+        document.getElementById('appointmentForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const successMsg = document.getElementById('appointmentSuccess');
+            successMsg.classList.remove('hidden');
+            
+            setTimeout(() => {
+                this.reset();
+                successMsg.classList.add('hidden');
+            }, 3000);
+        });
+
+        // Live Vitals Simulation
+        let vitalsInterval;
+        function startVitalsMonitoring() {
+            vitalsInterval = setInterval(() => {
+                document.getElementById('heartRate').textContent = 70 + Math.floor(Math.random() * 10);
+                document.getElementById('oxygenSat').textContent = 96 + Math.floor(Math.random() * 4);
+                document.getElementById('respRate').textContent = 14 + Math.floor(Math.random() * 6);
+            }, 2000);
+        }
+
+        function recordVitals() {
+            alert('Vitals recorded successfully at ' + new Date().toLocaleTimeString());
+        }
+
+        function viewHistory() {
+            alert('Opening vitals history...');
+        }
+
+        // Start vitals monitoring on page load
+        startVitalsMonitoring();
+
+        // AI Triage Chatbot
+        const triageResponses = [
+            "I understand you're experiencing discomfort. Can you describe the location and intensity of your symptoms?",
+            "Thank you for sharing. How long have you been experiencing these symptoms?",
+            "Based on what you've described, I recommend scheduling an appointment with our general physician. Would you like me to book one for you?",
+            "I've noted your symptoms. For immediate assistance, you can also call our 24/7 helpline at 1800-XXX-XXXX."
+        ];
+        let responseIndex = 0;
+
+        function sendTriageMessage() {
+            const input = document.getElementById('triageInput');
+            const messagesContainer = document.getElementById('chatMessages');
+            
+            if (input.value.trim() === '') return;
+            
+            // Add user message
+            const userMsg = document.createElement('div');
+            userMsg.className = 'message message-user';
+            userMsg.textContent = input.value;
+            messagesContainer.appendChild(userMsg);
+            
+            input.value = '';
+            
+            // Simulate AI response
+            setTimeout(() => {
+                const botMsg = document.createElement('div');
+                botMsg.className = 'message message-bot';
+                botMsg.textContent = triageResponses[responseIndex % triageResponses.length];
+                messagesContainer.appendChild(botMsg);
+                responseIndex++;
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            }, 1000);
+            
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        document.getElementById('triageInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendTriageMessage();
+            }
+        });
+
+        // Prescription Form
+        document.getElementById('prescriptionForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            alert('Prescription added successfully!');
+            this.reset();
+        });
+
+        // OCR File Upload
+        const uploadArea = document.getElementById('uploadArea');
+        
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, () => {
+                uploadArea.classList.add('drag-over');
+            });
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            uploadArea.addEventListener(eventName, () => {
+                uploadArea.classList.remove('drag-over');
+            });
+        });
+
+        uploadArea.addEventListener('drop', function(e) {
+            const files = e.dataTransfer.files;
+            handleFiles(files);
+        });
+
+        function handleFileUpload(event) {
+            const files = event.target.files;
+            handleFiles(files);
+        }
+
+        function handleFiles(files) {
+            if (files.length > 0) {
+                const file = files[0];
+                document.getElementById('fileName').textContent = file.name;
+                document.getElementById('fileSize').textContent = (file.size / 1024 / 1024).toFixed(2) + ' MB';
+                document.getElementById('filePreviewContainer').classList.remove('hidden');
+            }
+        }
+
+        function processOCR() {
+            const resultsDiv = document.getElementById('ocrResults');
+            resultsDiv.classList.add('hidden');
+            
+            // Simulate OCR processing
+            setTimeout(() => {
+                resultsDiv.classList.remove('hidden');
+                resultsDiv.scrollIntoView({ behavior: 'smooth' });
+            }, 2000);
+        }
+
+        // Update nav active state on scroll
+        document.querySelectorAll('.nav-links a').forEach(link => {
+            link.addEventListener('click', function() {
+                document.querySelectorAll('.nav-links a').forEach(l => l.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+    </script>
+</body>
+</html>
